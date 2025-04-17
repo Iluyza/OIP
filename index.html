@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Векторный поиск</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .search-container {
+            text-align: center;
+            margin: 40px 0;
+        }
+        .search-box {
+            width: 80%;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .search-button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .search-button:hover {
+            background-color: #45a049;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        .result-item {
+            background-color: white;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .result-score {
+            color: #666;
+            font-size: 14px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="search-container">
+        <h1>Векторный поиск</h1>
+        <input type="text" id="search-input" class="search-box" placeholder="Введите поисковый запрос...">
+        <button onclick="performSearch()" class="search-button">Поиск</button>
+    </div>
+    
+    <div id="loading" class="loading">
+        Поиск...
+    </div>
+    
+    <div id="results" class="results"></div>
+
+    <script>
+        function performSearch() {
+            const query = document.getElementById('search-input').value;
+            if (!query) return;
+
+            // Показываем индикатор загрузки
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('results').innerHTML = '';
+
+            // Выполняем поисковый запрос
+            fetch(`/search?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Скрываем индикатор загрузки
+                    document.getElementById('loading').style.display = 'none';
+                    
+                    // Отображаем результаты
+                    const resultsDiv = document.getElementById('results');
+                    if (data.results.length === 0) {
+                        resultsDiv.innerHTML = '<p>Ничего не найдено</p>';
+                        return;
+                    }
+
+                    let html = '';
+                    data.results.forEach(result => {
+                        html += `
+                            <div class="result-item">
+                                <div>Документ ${result[0]}</div>
+                                <div class="result-score">Релевантность: ${result[1].toFixed(4)}</div>
+                            </div>
+                        `;
+                    });
+                    resultsDiv.innerHTML = html;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('results').innerHTML = '<p>Произошла ошибка при выполнении поиска</p>';
+                });
+        }
+
+        // Добавляем обработку нажатия Enter
+        document.getElementById('search-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                performSearch();
+            }
+        });
+    </script>
+</body>
+</html>
